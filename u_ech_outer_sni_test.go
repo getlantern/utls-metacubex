@@ -368,9 +368,15 @@ func TestECHRejectionVerifiesOuterName(t *testing.T) {
 	})
 }
 
+func TestValidECHOuterServerNameLabelLength(t *testing.T) {
+	if name := strings.Repeat("a", 63) + ".example"; !validECHOuterServerName(name) {
+		t.Errorf("%q rejected, want a 63-byte label accepted", name)
+	}
+}
+
 func TestECHOuterServerNameRejectsInvalidName(t *testing.T) {
 	configList, _ := newTestECHKey(t, testECHPublicName)
-	for _, name := range []string{"192.0.2.1", "override.example.", "bad name"} {
+	for _, name := range []string{"192.0.2.1", "override.example.", "bad name", strings.Repeat("a", 64) + ".example"} {
 		for idName, id := range map[string]ClientHelloID{"golang": HelloGolang, "chrome": HelloChrome_Auto} {
 			client, server := net.Pipe()
 			uc := UClient(client, &Config{
