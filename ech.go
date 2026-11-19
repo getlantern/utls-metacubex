@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/exp/slices"
+	"net"
 	"strings"
 
 	"github.com/metacubex/utls/internal/hpke"
@@ -476,6 +477,29 @@ func validDNSName(name string) bool {
 		}
 	}
 	return true
+}
+
+// validECHOuterServerName reports whether name may be sent as SNI. IP
+// literals and labels over 63 bytes pass validDNSName but are not valid
+// host names (RFC 6066, RFC 1035).
+func validECHOuterServerName(name string) bool {
+	if !validDNSName(name) || net.ParseIP(name) != nil {
+		return false
+	}
+	for _, label := range strings.Split(name, ".") {
+		if len(label) > 63 {
+			return false
+		}
+	}
+	return true
+}
+
+// echOuterServerName returns the SNI to send in the outer ClientHello.
+func (c *Config) echOuterServerName(config *echConfig) string {
+	if c.ECHOuterServerName != "" {
+		return c.ECHOuterServerName
+	}
+	return string(config.PublicName)
 }
 
 // ECHRejectionError is the error type returned when ECH is rejected by a remote
