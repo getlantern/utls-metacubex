@@ -615,8 +615,10 @@ func (e *ALPNExtension) writeToUConn(uc *UConn) error {
 	// Config ALPN will be written to inner Hello
 	if uc.config.EncryptedClientHelloConfigList == nil {
 		uc.config.NextProtos = e.AlpnProtocols
-		uc.HandshakeState.Hello.AlpnProtocols = e.AlpnProtocols
 	}
+	// The outer hello still carries this list; an ECH rejection checks the
+	// server's ALPN against it.
+	uc.HandshakeState.Hello.AlpnProtocols = e.AlpnProtocols
 	return nil
 }
 

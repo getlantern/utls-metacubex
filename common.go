@@ -889,6 +889,14 @@ type Config struct {
 	// when ECH is rejected, even if set, and InsecureSkipVerify is ignored.
 	EncryptedClientHelloRejectionVerify func(ConnectionState) error
 
+	// ECHOuterServerName, if non-empty, replaces the ECHConfig's public_name
+	// as the SNI of the outer ClientHello. It must be a valid DNS name that
+	// the ECH provider's client-facing server answers for: if ECH is
+	// rejected, the server certificate is verified against this name, and
+	// that verification is what makes the retry configs trusted. Ignored when
+	// EncryptedClientHelloConfigList is nil.
+	ECHOuterServerName string // [uTLS]
+
 	// EncryptedClientHelloKeys are the ECH keys to use when a client
 	// attempts ECH.
 	//
@@ -1017,6 +1025,7 @@ func (c *Config) Clone() *Config {
 		KeyLogWriter:                        c.KeyLogWriter,
 		EncryptedClientHelloConfigList:      c.EncryptedClientHelloConfigList,
 		EncryptedClientHelloRejectionVerify: c.EncryptedClientHelloRejectionVerify,
+		ECHOuterServerName:                  c.ECHOuterServerName,
 		EncryptedClientHelloKeys:            c.EncryptedClientHelloKeys,
 		sessionTicketKeys:                   c.sessionTicketKeys,
 		autoSessionTicketKeys:               c.autoSessionTicketKeys,

@@ -349,6 +349,9 @@ func (c *Conn) makeClientHelloForApplyPreset() (*clientHelloMsg, *keySharePrivat
 		if echConfig == nil {
 			return nil, nil, nil, errors.New("tls: EncryptedClientHelloConfigList contains no valid configs")
 		}
+		if c.config.ECHOuterServerName != "" && !validECHOuterServerName(c.config.ECHOuterServerName) {
+			return nil, nil, nil, errors.New("tls: ECHOuterServerName is not a valid DNS name")
+		}
 		ech = &echClientContext{config: echConfig}
 		hello.encryptedClientHello = []byte{1} // indicate inner hello
 		// We need to explicitly set these 1.2 fields to nil, as we do not
@@ -471,7 +474,7 @@ func (c *UConn) clientHandshake(ctx context.Context) (err error) {
 
 		// Overwrite the server name in the outer hello with the public facing
 		// name.
-		hello.serverName = string(ech.config.PublicName)
+		hello.serverName = c.config.echOuterServerName(ech.config)
 		// Generate a new random for the outer hello.
 		hello.random = make([]byte, 32)
 		_, err = io.ReadFull(c.config.rand(), hello.random)
